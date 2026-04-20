@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SACH Engineering Design – Hourly Rate Calculator</title>
+<style>
+:root {
+  --bg: #181818;
+  --surface: #282828;
+  --input-bg: #303030;
+  --border: #3a3a3a;
+  --accent: #dca481;
+  --accent2: #c49060;
+  --text: #c9c9c9;
+  --white: #ffffff;
+  --muted: #666666;
+  --green: #7ecfaa;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--text); font-family: Arial, sans-serif; font-size: 15px; overflow-x: hidden; }
+body { padding: 20px 16px 40px; }
+.wrap { max-width: 820px; margin: 0 auto; }
+
+/* HEADER */
+.logo { height: 48px; width: auto; mix-blend-mode: screen; display: block; margin-bottom: 16px; }
+.eyebrow { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+h1 { font-size: 28px; font-weight: bold; color: var(--white); margin-bottom: 4px; letter-spacing: 1px; }
+h1 span { color: var(--accent); font-weight: normal; }
+.sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+/* GRID */
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+@media(max-width: 600px) { .grid { grid-template-columns: 1fr; } h1 { font-size: 20px; } }
+
+/* CARDS */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 18px; }
+.card-title { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+/* PERIOD TOGGLE */
+.toggle { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.toggle button { flex: 1; padding: 5px 12px; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; background: none; border: none; color: var(--muted); cursor: pointer; }
+.toggle button.on { background: var(--accent); color: #181818; font-weight: bold; }
+
+/* FIELDS */
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+.field input[type=number], .field select { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 4px; color: var(--white); font-size: 15px; padding: 9px 12px; -moz-appearance: textfield; appearance: textfield; }
+.field input[type=number]::-webkit-inner-spin-button { display: none; }
+.field input[type=number]:focus, .field select:focus { outline: none; border-color: var(--accent); }
+.field select option { background: var(--surface); }
+.note { font-size: 11px; color: var(--muted); background: var(--input-bg); border: 1px solid var(--border); border-radius: 4px; padding: 8px 10px; margin-top: 10px; }
+.note b { color: var(--accent); }
+
+/* SLIDERS */
+.hint { font-size: 12px; color: var(--muted); border-left: 2px solid var(--accent2); padding: 7px 10px; margin-bottom: 8px; line-height: 1.5; }
+.hint b { color: var(--text); }
+.srow { display: flex; align-items: center; gap: 10px; }
+.srow input[type=range] { flex: 1; -webkit-appearance: none; appearance: none; height: 3px; background: var(--border); border-radius: 2px; outline: none; }
+.srow input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; background: var(--accent); border-radius: 50%; cursor: pointer; }
+.srow input[type=range]::-moz-range-thumb { width: 16px; height: 16px; background: var(--accent); border-radius: 50%; cursor: pointer; border: none; }
+.sval { font-size: 13px; color: var(--accent); min-width: 38px; text-align: right; font-family: monospace; }
+
+/* RESULT PANEL */
+.result { background: var(--surface); border: 1px solid var(--accent2); border-radius: 6px; padding: 20px; position: relative; overflow: hidden; }
+.result::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #dca481, #c49060, transparent); }
+.rgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+@media(max-width: 480px) { .rgrid { grid-template-columns: 1fr 1fr; } }
+.ritem .rl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 5px; }
+.ritem .rv { font-size: 22px; font-weight: bold; color: var(--text); font-family: monospace; line-height: 1.1; }
+.ritem .rv.accent { color: var(--accent); font-size: 26px; }
+.ritem .rv.green { color: var(--green); }
+.ritem .rs { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.fbar { font-size: 11px; color: var(--muted); background: var(--input-bg); border-radius: 4px; padding: 10px 12px; line-height: 1.9; word-break: break-word; font-family: monospace; }
+.fbar span { color: var(--accent); }
+.tbtn { background: none; border: 1px solid var(--border); border-radius: 4px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; padding: 8px 14px; cursor: pointer; margin-top: 12px; }
+.tbtn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* BREAKDOWN */
+.bd { margin-top: 12px; display: none; }
+.bd.open { display: block; }
+.br { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.br:last-child { border: none; font-weight: bold; }
+.br .bn { color: var(--muted); }
+.br .bv { font-family: monospace; color: var(--text); }
+.br:last-child .bv { color: var(--accent); }
+
+/* FOOTER */
+footer { text-align: center; font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="eyebrow">Design &amp; Engineering Services · India</div>
+  <h1>Hourly Rate <span>Calculator</span></h1>
+  <p class="sub">Plug in your costs, get your billing rate.</p>
+
+  <!-- INPUTS -->
+  <div class="grid">
+
+    <!-- COSTS CARD -->
+    <div class="card">
+      <div class="card-title">
+        <span>Costs (₹)</span>
+        <div class="toggle">
+          <button id="btnY" class="on" onclick="setPeriod('yearly')">Yearly</button>
+          <button id="btnM" onclick="setPeriod('monthly')">Monthly</button>
+        </div>
+      </div>
+      <div class="field"><label id="lSal">Salary / year</label><input type="number" id="salary" value="960000" min="0" inputmode="numeric"></div>
+      <div class="field"><label id="lSoft">Software licences / year</label><input type="number" id="software" value="180000" min="0" inputmode="numeric"></div>
+      <div class="field"><label id="lOver">Office overhead / year</label><input type="number" id="overhead" value="240000" min="0" inputmode="numeric"></div>
+      <div class="field"><label id="lHard">Hardware depreciation / year</label><input type="number" id="hardware" value="60000" min="0" inputmode="numeric"></div>
+      <div class="field"><label id="lAdm">Admin &amp; support / year</label><input type="number" id="admin" value="120000" min="0" inputmode="numeric"></div>
+      <div class="note" id="mnote">Monthly equivalent: <b id="mval">—</b></div>
+    </div>
+
+    <!-- PARAMETERS CARD -->
+    <div class="card">
+      <div class="card-title">Parameters</div>
+      <div class="field"><label>Working hours / month</label><input type="number" id="workHours" value="160" min="1" max="300" inputmode="numeric"></div>
+
+      <div class="field">
+        <label>Utilisation rate (billable %)</label>
+        <div class="hint"><b>Typical: 60–75%.</b> Meetings and admin are non-billable. Lower = higher cost per billable hour.</div>
+        <div class="srow"><input type="range" id="utilization" min="40" max="95" value="70" step="1"><span class="sval" id="utilVal">70%</span></div>
+      </div>
+
+      <div class="field">
+        <label>Profit margin</label>
+        <div class="hint"><b>Typical: 20–40%.</b> On top of all costs. Funds growth and lean months.</div>
+        <div class="srow"><input type="range" id="margin" min="10" max="60" value="30" step="1"><span class="sval" id="marginVal">30%</span></div>
+      </div>
+
+      <div class="field">
+        <label>Project risk buffer</label>
+        <div class="hint"><b>0–5%</b> for clear scope. <b>15–25%</b> for ambiguous or new clients.</div>
+        <div class="srow"><input type="range" id="risk" min="0" max="30" value="10" step="1"><span class="sval" id="riskVal">10%</span></div>
+      </div>
+
+      <div class="field"><label>Client type</label>
+        <select id="clientType">
+          <option value="1.0">Established company</option>
+          <option value="0.85">Startup / budget-constrained</option>
+          <option value="1.15">Enterprise / premium</option>
+          <option value="1.1">Long-term retainer</option>
+        </select>
+      </div>
+
+      <div class="field"><label>Apply GST (18%)</label>
+        <select id="gst">
+          <option value="1">Yes — add 18% GST</option>
+          <option value="0">No — quote ex-GST</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT PANEL -->
+  <div class="result">
+    <div class="rgrid">
+      <div class="ritem">
+        <div class="rl">Cost / billable hr</div>
+        <div class="rv" id="costPerHour">₹0</div>
+        <div class="rs">break-even floor</div>
+      </div>
+      <div class="ritem">
+        <div class="rl">Recommended rate</div>
+        <div class="rv accent" id="recommendedRate">₹0</div>
+        <div class="rs">ex-GST</div>
+      </div>
+      <div class="ritem">
+        <div class="rl">Invoice rate</div>
+        <div class="rv green" id="invoiceRate">₹0</div>
+        <div class="rs" id="gstNote">incl. 18% GST</div>
+      </div>
+    </div>
+    <div class="fbar" id="fbar">—</div>
+    <button class="tbtn" id="tbtn" onclick="toggleBD()">&#9658; Show full breakdown</button>
+    <div class="bd" id="bd">
+      <div class="br"><span class="bn">Total monthly cost</span><span class="bv" id="bTotal">—</span></div>
+      <div class="br"><span class="bn">Billable hours / month</span><span class="bv" id="bHrs">—</span></div>
+      <div class="br"><span class="bn">Base cost / hour</span><span class="bv" id="bBase">—</span></div>
+      <div class="br"><span class="bn">After profit margin</span><span class="bv" id="bMarg">—</span></div>
+      <div class="br"><span class="bn">After risk buffer</span><span class="bv" id="bRisk">—</span></div>
+      <div class="br"><span class="bn">After client adjustment</span><span class="bv" id="bCli">—</span></div>
+      <div class="br"><span class="bn">GST amount</span><span class="bv" id="bGST">—</span></div>
+      <div class="br"><span class="bn">Final invoice rate / hr</span><span class="bv" id="bFin">—</span></div>
+    </div>
+  </div>
+
+  <footer>All figures in Indian Rupees (INR) &nbsp;·&nbsp; GST applicable under the CGST Act</footer>
+</div>
+
+<script>
+// Indian number formatter - pure JS, no locale API needed
+function fmt(n) {
+  var r = Math.round(n);
+  if (!isFinite(r) || isNaN(r)) return '0';
+  var neg = r < 0 ? '-' : '';
+  var s = Math.abs(r).toString();
+  if (s.length <= 3) return 'Rs.' + neg + s;
+  var last3 = s.slice(s.length - 3);
+  var rest = s.slice(0, s.length - 3);
+  var result = '';
+  while (rest.length > 2) {
+    result = ',' + rest.slice(rest.length - 2) + result;
+    rest = rest.slice(0, rest.length - 2);
+  }
+  return 'Rs.' + neg + rest + result + ',' + last3;
+}
+
+var period = 'yearly';
+
+function gv(id) {
+  var el = document.getElementById(id);
+  if (!el) return 0;
+  var v = parseFloat(el.value);
+  return (isNaN(v) || !isFinite(v)) ? 0 : v;
+}
+
+function st(id, txt) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = txt;
+}
+
+function calc() {
+  var div = (period === 'yearly') ? 12 : 1;
+  var total = (gv('salary') + gv('software') + gv('overhead') + gv('hardware') + gv('admin')) / div;
+  var wh    = gv('workHours') || 160;
+  var util  = gv('utilization') / 100;
+  var marg  = gv('margin') / 100;
+  var risk  = gv('risk') / 100;
+  var cm    = parseFloat(document.getElementById('clientType').value) || 1;
+  var gst   = parseInt(document.getElementById('gst').value);
+
+  var hrs   = wh * util;
+  var base  = hrs > 0 ? total / hrs : 0;
+  var am    = base  * (1 + marg);
+  var ar    = am    * (1 + risk);
+  var ac    = ar    * cm;
+  var ga    = gst   ? ac * 0.18 : 0;
+  var fin   = ac + ga;
+
+  st('mval',            fmt(total) + '/mo');
+  st('costPerHour',     fmt(base));
+  st('recommendedRate', fmt(ac));
+  st('invoiceRate',     fmt(fin));
+  st('gstNote',         gst ? 'incl. 18% GST' : 'GST not applied');
+
+  document.getElementById('fbar').innerHTML =
+    '(' + fmt(total) + '/mo &divide; <span>' + Math.round(hrs) + ' hrs</span>) &times; ' +
+    '<span>(1 + ' + Math.round(marg*100) + '% margin)</span> &times; ' +
+    '<span>(1 + ' + Math.round(risk*100) + '% risk)</span> &times; ' +
+    '<span>' + cm + 'x client</span>' +
+    (gst ? ' + <span>18% GST</span>' : '') +
+    ' = <span>' + fmt(fin) + '/hr</span>';
+
+  st('bTotal', fmt(total) + '/mo');
+  st('bHrs',   Math.round(hrs) + ' hrs');
+  st('bBase',  fmt(base));
+  st('bMarg',  fmt(am));
+  st('bRisk',  fmt(ar));
+  st('bCli',   fmt(ac));
+  st('bGST',   gst ? fmt(ga) : '—');
+  st('bFin',   fmt(fin));
+}
+
+function setPeriod(p) {
+  period = p;
+  document.getElementById('btnY').className = p === 'yearly' ? 'on' : '';
+  document.getElementById('btnM').className = p === 'monthly' ? 'on' : '';
+  var sfx = p === 'yearly' ? '/ year' : '/ month';
+  st('lSal',  'Salary ' + sfx);
+  st('lSoft', 'Software licences ' + sfx);
+  st('lOver', 'Office overhead ' + sfx);
+  st('lHard', 'Hardware depreciation ' + sfx);
+  st('lAdm',  'Admin & support ' + sfx);
+  var f = p === 'yearly' ? 12 : (1/12);
+  ['salary','software','overhead','hardware','admin'].forEach(function(id) {
+    var el = document.getElementById(id);
+    el.value = Math.round((parseFloat(el.value) || 0) * f);
+  });
+  calc();
+}
+
+function toggleBD() {
+  var bd  = document.getElementById('bd');
+  var btn = document.getElementById('tbtn');
+  if (bd.className.indexOf('open') >= 0) {
+    bd.className = 'bd';
+    btn.innerHTML = '&#9658; Show full breakdown';
+  } else {
+    bd.className = 'bd open';
+    btn.innerHTML = '&#9660; Hide breakdown';
+  }
+}
+
+// Wire up sliders
+var sliders = ['utilization','margin','risk'];
+var sliderLabels = ['utilVal','marginVal','riskVal'];
+for (var i = 0; i < sliders.length; i++) {
+  (function(sid, lid) {
+    var el = document.getElementById(sid);
+    function update() {
+      document.getElementById(lid).textContent = el.value + '%';
+      calc();
+    }
+    el.addEventListener('input',  update);
+    el.addEventListener('change', update);
+  })(sliders[i], sliderLabels[i]);
+}
+
+// Wire up number inputs and selects
+var fields = ['salary','software','overhead','hardware','admin','workHours','clientType','gst'];
+for (var j = 0; j < fields.length; j++) {
+  (function(fid) {
+    var el = document.getElementById(fid);
+    if (el) {
+      el.addEventListener('input',  calc);
+      el.addEventListener('change', calc);
+    }
+  })(fields[j]);
+}
+
+// Run on load
+window.onload = function() { calc(); };
+// Belt-and-suspenders: also run after a short delay
+setTimeout(calc, 200);
+setTimeout(calc, 800);
+</script>
+</body>
+</html>
