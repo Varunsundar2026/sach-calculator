@@ -86,6 +86,9 @@ h1 span { color: var(--accent); font-weight: normal; }
 .br:last-child .bv { color: var(--accent); }
 
 /* FOOTER */
+.irow { display: flex; align-items: center; gap: 8px; }
+.irow input[type=number] { flex: 1; min-width: 0; }
+.readable { font-size: 13px; font-weight: bold; color: var(--accent); white-space: nowrap; min-width: 72px; text-align: right; font-family: monospace; }
 footer { text-align: center; font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
 </style>
 </head>
@@ -109,11 +112,11 @@ footer { text-align: center; font-size: 11px; color: var(--muted); letter-spacin
           <button id="btnM" onclick="setPeriod('monthly')">Monthly</button>
         </div>
       </div>
-      <div class="field"><label id="lSal">Salary / year</label><input type="number" id="salary" value="960000" min="0" inputmode="numeric"></div>
-      <div class="field"><label id="lSoft">Software licences / year</label><input type="number" id="software" value="180000" min="0" inputmode="numeric"></div>
-      <div class="field"><label id="lOver">Office overhead / year</label><input type="number" id="overhead" value="240000" min="0" inputmode="numeric"></div>
-      <div class="field"><label id="lHard">Hardware depreciation / year</label><input type="number" id="hardware" value="60000" min="0" inputmode="numeric"></div>
-      <div class="field"><label id="lAdm">Admin &amp; support / year</label><input type="number" id="admin" value="120000" min="0" inputmode="numeric"></div>
+      <div class="field"><label id="lSal">Salary / year</label><div class="irow"><input type="number" id="salary" value="960000" min="0" inputmode="numeric"><span class="readable" id="rSal">96 Lakhs</span></div></div>
+      <div class="field"><label id="lSoft">Software licences / year</label><div class="irow"><input type="number" id="software" value="180000" min="0" inputmode="numeric"><span class="readable" id="rSoft">18 Lakhs</span></div></div>
+      <div class="field"><label id="lOver">Office overhead / year</label><div class="irow"><input type="number" id="overhead" value="240000" min="0" inputmode="numeric"><span class="readable" id="rOver">24 Lakhs</span></div></div>
+      <div class="field"><label id="lHard">Hardware depreciation / year</label><div class="irow"><input type="number" id="hardware" value="60000" min="0" inputmode="numeric"><span class="readable" id="rHard">60 K</span></div></div>
+      <div class="field"><label id="lAdm">Admin &amp; support / year</label><div class="irow"><input type="number" id="admin" value="120000" min="0" inputmode="numeric"><span class="readable" id="rAdm">12 Lakhs</span></div></div>
       <div class="note" id="mnote">Monthly equivalent: <b id="mval">—</b></div>
     </div>
 
@@ -195,6 +198,28 @@ footer { text-align: center; font-size: 11px; color: var(--muted); letter-spacin
 </div>
 
 <script>
+// Human-readable formatter: Lakhs / K
+function fmtReadable(n) {
+  if (!isFinite(n) || isNaN(n) || n === 0) return '—';
+  if (n >= 100000) {
+    var l = n / 100000;
+    return (l % 1 === 0 ? l.toString() : l.toFixed(2).replace(/\.?0+$/, '')) + ' L';
+  }
+  if (n >= 1000) {
+    var k = n / 1000;
+    return (k % 1 === 0 ? k.toString() : k.toFixed(1).replace(/\.?0+$/, '')) + ' K';
+  }
+  return n.toString();
+}
+
+function updateReadable() {
+  var ids = ['salary','software','overhead','hardware','admin'];
+  var rids = ['rSal','rSoft','rOver','rHard','rAdm'];
+  for (var i = 0; i < ids.length; i++) {
+    st(rids[i], fmtReadable(gv(ids[i])));
+  }
+}
+
 // Indian number formatter - pure JS, no locale API needed
 function fmt(n) {
   var r = Math.round(n);
@@ -227,6 +252,7 @@ function st(id, txt) {
 }
 
 function calc() {
+  updateReadable();
   var div = (period === 'yearly') ? 12 : 1;
   var total = (gv('salary') + gv('software') + gv('overhead') + gv('hardware') + gv('admin')) / div;
   var wh    = gv('workHours') || 160;
